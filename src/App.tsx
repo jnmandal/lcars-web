@@ -1,7 +1,14 @@
 import 'react'
 import Clock from './Clock.tsx';
+import Avatar from './assets/restaurateur.png';
 
 function App() {
+  const { agentName, agentTagline, initialMessage} = {
+    agentName: "Karim",
+    agentTagline: "Owner, Karim's Kitchen",
+    initialMessage: "What can I get you today?"
+  }
+
   return (
     <>
       <div className="bg-gradient-to-r from-amber-200 to-stone-500 px-6 py-4 flex flex-row">
@@ -20,12 +27,12 @@ function App() {
           <div className="bg-gradient-to-r from-stone-300 to-stone-500 px-6 py-4">
             <div className="flex items-center space-x-3">
               <div className="w-25 h-25 bg-white bg-opacity-20 flex items-center justify-center border-5 border-amber-100">
-                <img />
+                <img src={Avatar} />
               </div>
                <div>
-                <h3 className="text-lg font-semibold text-amber-300">Agent Name</h3>
+                <h3 className="text-lg font-semibold text-amber-300">{ agentName }</h3>
                 <p className="text-amber-200 text-sm">
-                  Agent tagline
+                  { agentTagline }
                 </p>
               </div>
             </div>
@@ -36,18 +43,18 @@ function App() {
               <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              Start a conversation with Agent Name!
+              Start a conversation with { agentName }!
+            </div>
+            {/* <div className="flex justify-start">
+              <div className="bg-white text-black border px-4 py-2 rounded-lg max-w-xs shadow-sm">
+                { initialMessage }
+              </div>
             </div>
             <div className="flex justify-end">
               <div className="bg-blue-500 text-white px-4 py-2 rounded-lg max-w-xs">
                 User message...
               </div>
-            </div>
-            <div className="flex justify-start">
-              <div className="bg-white text-black border px-4 py-2 rounded-lg max-w-xs shadow-sm">
-                Agent message...
-              </div>
-            </div>
+            </div> */}
             {/* thinking indicator here... */}
           </div>
           <div className="p-4 border-t bg-white ">
