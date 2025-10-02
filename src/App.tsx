@@ -6,7 +6,7 @@ function App() {
   const [messages, setMessages] = useState([])
   const [agentThinking, setAgentThinking] = useState(false)
   const [msgInputContent, setMsgInputContent] = useState("")
-
+  const [orderItems, setOrderItems] = useState([])
 
   function sendMessage(content: string, cb: Function) {
     const BASE_URL = "//localhost:8000"
@@ -22,7 +22,7 @@ function App() {
     })
     .then(res => res.json())
     .then(data => {
-      console.log(data)
+      console.log("Received msg", data)
       return data
     })
     .then(cb)
@@ -30,7 +30,6 @@ function App() {
 
   function handleChatBoxSubmit(e) {
     e.preventDefault()
-    console.log(e)
     console.log("Sending msg", msgInputContent)
 
     // be careful, setMessages is async!
@@ -48,14 +47,16 @@ function App() {
         type: "assistant"
       }]))
       setAgentThinking(false)
+      setOrderItems(data.agent_response.items)
     })
   }
 
   // Placeholders...
-  const { agentName, agentTagline, initialMessage } = {
+  const { agentName, agentTagline, initialMessage, placeholder } = {
     agentName: "Karim",
     agentTagline: "Owner, Karim's Kitchen",
-    initialMessage: "What can I get you today?"
+    initialMessage: "What can I get you today?",
+    placeholder: "Two chicken afghani please..."
   }
 
   return (
@@ -93,7 +94,7 @@ function App() {
                 <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                Start a conversation with { agentName }!
+                Start a conversation with { agentName }...
               </div>
               : <></>
             }
@@ -113,13 +114,24 @@ function App() {
                 </div>
               )
             }
-            { agentThinking ? <div>Loading...</div> : <></> }
+            { agentThinking ?
+              <div className="flex justify-end">
+                <div className="bg-white border px-4 py-2 rounded-lg shadow-sm">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: "0.1s"}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
+                  </div>
+                </div>
+              </div>
+              : <></>
+            }
           </div>
           <div className="p-4 border-t bg-white ">
             <form className="flex space-x-2" onSubmit={handleChatBoxSubmit}>
               <input
                 type="text"
-                placeholder="Two chicken afghani please..."
+                placeholder={placeholder}
                 value={msgInputContent}
                 onChange={e => setMsgInputContent(e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-black"
@@ -132,6 +144,10 @@ function App() {
               <button
                 id="record-button"
                 className="px-3 py-3 font-semibold transition-colors flex flex-row bg-blue-500 hover:bg-blue-600 text-white"
+                onClick={e => {
+                  e.preventDefault();
+                  alert("Hold your horses! This feature is still in progress...")
+                }}
                 // {[
                 //   ,
                 //   if(@recording?,
@@ -151,35 +167,42 @@ function App() {
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden border-2 border-dashed my-5 p-1 mx-5">
-        <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50 select-none">
-                  field 1
-                </th>
-                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50 select-none">
-                  field 2
-                </th>
-                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50 select-none">
-                  field 3
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="hover:bg-blue-50 focus-within:bg-blue-50">
-                <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">field value 1</td>
-                <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">field value 2</td>
-                <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">field value 3</td>
-              </tr>
-              <tr className="hover:bg-blue-50 focus-within:bg-blue-50">
-                <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">field value 1</td>
-                <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">field value 2</td>
-                <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">field value 3</td>
-              </tr>
-            </tbody>
-        </table>
-      </div>
+        { orderItems.length > 0 ?
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden border-2 border-dashed my-5 p-1 mx-5">
+            <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50 select-none">
+                      Name
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50 select-none">
+                      Price
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50 select-none">
+                      Quantity
+                    </th>
+                    <th className="border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 bg-gray-50 select-none">
+                      Size
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                    orderItems.map( item =>
+                      <tr className="hover:bg-blue-50 focus-within:bg-blue-50">
+                        <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">{ item.name }</td>
+                        <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">{ item.price }</td>
+                        <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">{ item.quantity }</td>
+                        <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 bg-white">{ item.size }</td>
+                      </tr>
+                    )
+                  }
+                </tbody>
+            </table>
+          </div>
+          :
+          <></>
+        }
     </>
   )
 }
