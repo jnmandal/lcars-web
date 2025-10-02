@@ -8,7 +8,7 @@ function App() {
   const [msgInputContent, setMsgInputContent] = useState("")
   const [orderItems, setOrderItems] = useState([])
 
-  function sendMessage(content: string, cb: Function) {
+  function sendMessage(content: String, previousMessages: Array<Object>, cb: Function) {
     const BASE_URL = "//localhost:8000"
 
     fetch(`${BASE_URL}/agents/restaurateur`, {
@@ -17,7 +17,8 @@ function App() {
         "Content-type": "application/json"
       },
       body: JSON.stringify({
-        content
+        content,
+        previous_messages: previousMessages
       })
     })
     .then(res => res.json())
@@ -35,20 +36,19 @@ function App() {
     // be careful, setMessages is async!
     const nextMessages = messages.concat([{
         content: msgInputContent,
-        type: "user"
+        role: "user"
       }])
     setMsgInputContent("")
     setAgentThinking(true)
-
-    setMessages(nextMessages)
-    sendMessage(msgInputContent, data => {
+    sendMessage(msgInputContent, messages, data => {
       setMessages(nextMessages.concat([{
         content: data.message,
-        type: "assistant"
+        role: "assistant"
       }]))
       setAgentThinking(false)
       setOrderItems(data.agent_response.items)
     })
+    setMessages(nextMessages)
   }
 
   // Placeholders...
@@ -100,7 +100,7 @@ function App() {
             }
             {
               messages.map(msg =>
-                msg.type == "user" ?
+                msg.role == "user" ?
                 <div className="flex justify-start" key={btoa(msg)}>
                   <div className="bg-white text-black border px-4 py-2 rounded-lg max-w-xs shadow-sm">
                     {msg.content}
