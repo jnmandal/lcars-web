@@ -51,8 +51,8 @@ function App() {
     setMessages(nextMessages)
   }
 
-  function handleWebRTCInit(e) {
-    const BASE_URL = '//localhost:8000:'
+  async function handleWebRTCInit(e: React.MouseEvent<HTMLButtonElement>) {
+    const BASE_URL = '//localhost:8000'
     e.preventDefault()
 
     const config = {};
@@ -109,16 +109,17 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sdp: peerConnection.localDescription.sdp,
-          type: peerConnection.localDescription.type,
+          sdp: peerConnection.localDescription?.sdp,
+          type: peerConnection.localDescription?.type,
           webrtc_id: webrtcId
         })
       })
 
       const serverResponse = await response.json();
       await peerConnection.setRemoteDescription(serverResponse);
+    } catch (error) {
+      console.error("WebRTC initialization error:", error);
     }
-
   }
 
   // Placeholders...
