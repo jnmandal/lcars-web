@@ -51,6 +51,76 @@ function App() {
     setMessages(nextMessages)
   }
 
+  function handleWebRTCInit(e) {
+    const BASE_URL = '//localhost:8000:'
+    e.preventDefault()
+
+    const config = {};
+    const peerConnection = new RTCPeerConnection(config)
+    const webrtcId = Math.random().toString(36).substring(7)
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+      const audioContext = new AudioContext();
+      const sourceInput = audioContext.createMediaStreamSource(stream);
+      const analyserInput = audioContext.createAnalyser();
+      sourceInput.connect(analyserInput);
+      // TODO is this necessary?
+      analyserInput.fftSize = 64;
+
+      const dataArrayInput = new Uint8Array(analyserInput.frequencyBinCount);
+
+      // TODO do we need to check the audio level here? like they do in the example?
+      // updateAudioLevel();
+
+      peerConnection.addEventListener('connectionstatechange', () => {
+        console.log('conenctionstatechange', peerConnection.connectionState);
+        // TODO add logic here for disconnect, etc
+      })
+
+      peerConnection.onicecandidate = ({ candidate }) => {
+        if (candidate) {
+          console.debug("Sending ICE candidate", candidate);
+          fetch(`${BASE_URL}/webrtc/offer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              candidate: candidate.toJSON(),
+              webrtc_id: webrtcId,
+              type: 'ice-candidate'
+            })
+          })
+        }
+      }
+
+      peerConnection.addEventListener('track', (evt) => {
+        // possible need to add debug log here for incorrect device inputs
+      })
+
+      // possibly want to set up a dataChannel
+      // const dataChannel = peerConnection.createDataChannel('text');
+
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      const response = await fetch(`${BASE_URL}/webrtc/offer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sdp: peerConnection.localDescription.sdp,
+          type: peerConnection.localDescription.type,
+          webrtc_id: webrtcId
+        })
+      })
+
+      const serverResponse = await response.json();
+      await peerConnection.setRemoteDescription(serverResponse);
+    }
+
+  }
+
   // Placeholders...
   const { agentName, agentTagline, initialMessage, placeholder } = {
     agentName: "Karim",
@@ -144,10 +214,12 @@ function App() {
               <button
                 id="record-button"
                 className="px-3 py-3 font-semibold transition-colors flex flex-row bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={e => {
-                  e.preventDefault();
-                  alert("Hold your horses! This feature is still in progress...")
-                }}
+                onClick={handleWebRTCInit}
+                  // e => {
+                  //   e.preventDefault();
+                  //   alert("Hold your horses! This feature is still in progress...")
+                  // }
+                // }
                 // {[
                 //   ,
                 //   if(@recording?,
