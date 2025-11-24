@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState, useRef} from 'react'
 import Clock from './Clock.tsx';
 import Avatar from './assets/restaurateur.png';
 
@@ -7,6 +7,7 @@ function App() {
   const [agentThinking, setAgentThinking] = useState(false)
   const [msgInputContent, setMsgInputContent] = useState("")
   const [orderItems, setOrderItems] = useState([])
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   function sendMessage(content: String, previousMessages: Array<Object>, cb: Function) {
     const BASE_URL = "//localhost:8000"
@@ -61,7 +62,10 @@ function App() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+      stream.getTracks().forEach(track => {
+        console.log('adding track', track)
+        peerConnection.addTrack(track, stream)
+      });
       const audioContext = new AudioContext();
       const sourceInput = audioContext.createMediaStreamSource(stream);
       const analyserInput = audioContext.createAnalyser();
@@ -96,11 +100,22 @@ function App() {
 
       peerConnection.addEventListener('track', (evt) => {
         // possible need to add debug log here for incorrect device inputs
+        if (evt.track.kind === 'audio') {
+          console.log('Received audio track:', evt)
+          const remoteStream = new MediaStream([evt.track]);
+          if (audioRef.current) {
+            audioRef.current.srcObject = remoteStream;
+            audioRef.current.play().catch(err => console.error('Error playing audio:', err));
+          }
+        }
+
       })
 
       // possibly want to set up a dataChannel
-      // const dataChannel = peerConnection.createDataChannel('text');
-
+      const dataChannel = peerConnection.createDataChannel('text');
+      dataChannel.onmessage = (event) => {
+        console.log('dataChannel msg', event);
+      }
 
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
@@ -122,7 +137,6 @@ function App() {
     }
   }
 
-  // Placeholders...
   const { agentName, agentTagline, initialMessage, placeholder } = {
     agentName: "Karim",
     agentTagline: "Owner, Karim's Kitchen",
@@ -276,6 +290,7 @@ function App() {
           :
           <></>
         }
+      <audio ref={audioRef} autoPlay style={{display: 'none'}} />
     </>
   )
 }
